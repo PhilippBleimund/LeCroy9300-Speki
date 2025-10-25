@@ -15,17 +15,20 @@ def parse_frequency(response: str) -> float:
     Returns:
         10001.75
     """
-    # Split by commas
-    parts = response.split(',')
-    if len(parts) < 2:
-        raise ValueError("Unexpected response format")
+    try:
+        # Split by commas
+        parts = response.split(',')
+        if len(parts) < 2:
+            raise ValueError("Unexpected response format")
 
-    # The numeric value is in the second part
-    value_str = parts[1].split()[0]  # '10.00175E+3'
+        # The numeric value is in the second part
+        value_str = parts[1].split()[0]  # '10.00175E+3'
 
-    # Convert to float
-    frequency = float(value_str)
-    return frequency
+        # Convert to float
+        frequency = float(value_str)
+        return frequency
+    except:
+        raise ValueError("Not able to parse")
 
 
 def get_freq(serial, retries=3, delay=0.5):
@@ -63,8 +66,6 @@ def get_freq(serial, retries=3, delay=0.5):
             else:
                 raise RuntimeError(f"Failed to get amplitude after {retries} attempts") from e
 
-    return 1.0
-
 
 def get_ampl(serial, retries=3, delay=0.5):
     """
@@ -100,8 +101,6 @@ def get_ampl(serial, retries=3, delay=0.5):
                 time.sleep(delay)
             else:
                 raise RuntimeError(f"Failed to get amplitude after {retries} attempts") from e
-
-    return 1.0
 
 
 def send_query(serial, command):
@@ -146,12 +145,15 @@ def main():
         fg.set_frequency(channel=2, value=i)
 
         time.sleep(0.5)
-        f = get_freq(s)
-        freq.append(f)
-        a = get_ampl(s)
-        ampl.append(a)
+        try:
+            f = get_freq(s)
+            a = get_ampl(s)
+            ampl.append(a)
+            freq.append(f)
+        except Exception as e:
+            print(e)
 
-        current_period = 1.0 / f
+        current_period = 1.0 / i
         period_change = abs(current_period - last_period) / last_period
 
         if period_change >= threshold:
